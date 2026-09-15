@@ -21,6 +21,9 @@
   <form id="susForm">
     <div class="card" id="questions"></div>
 
+    <div class="sectionTitle">Preguntas específicas de Q-Como</div>
+    <div class="card" id="customQuestions"></div>
+
     <div class="card">
       <div class="q">
         <p>Comentarios adicionales (opcional)</p>
@@ -34,15 +37,17 @@
   <div id="resultMsg"></div>
 
   <div class="card stats" id="statsCard" style="display:none;">
-    <div class="sub" style="margin-bottom:6px;">Media de todas las respuestas</div>
+    <div class="sub" style="margin-bottom:6px;">Media SUS (0-100)</div>
     <div class="big" id="avgScore">–</div>
+    <div class="sub" style="margin:14px 0 6px;">Media preguntas Q-Como (1-5)</div>
+    <div class="big" id="avgCustom">–</div>
     <div class="n" id="countText"></div>
   </div>
 
   <div class="card history" id="historyCard" style="display:none;">
     <div class="sub" style="margin-bottom:8px;">Historial</div>
     <table>
-      <thead><tr><th>Participante</th><th>SUS</th><th>Fecha</th></tr></thead>
+      <thead><tr><th>Participante</th><th>SUS</th><th>Q-Como</th><th>Fecha</th></tr></thead>
       <tbody id="historyBody"></tbody>
     </table>
     <div class="btnrow">
