@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q-Como · Cuestionario SUS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Cuestionario SUS · Q-Como</h1>
+  <div class="sub">Anónimo — rellena esto justo después de que el participante termine las tareas.</div>
+
+  <div class="card">
+    <div class="q">
+      <p>Código de participante (opcional, ej: "P1")</p>
+      <input type="text" id="pname" placeholder="Solo para diferenciarlos en tu lista, no es obligatorio">
+    </div>
+  </div>
+
+  <form id="susForm">
+    <div class="card" id="questions"></div>
+
+    <div class="card">
+      <div class="q">
+        <p>Comentarios adicionales (opcional)</p>
+        <textarea id="comments" rows="3" placeholder="Cualquier cosa que quieras añadir..."></textarea>
+      </div>
+    </div>
+
+    <button type="submit" id="submitBtn">Guardar respuesta</button>
+  </form>
+
+  <div id="resultMsg"></div>
+
+  <div class="card stats" id="statsCard" style="display:none;">
+    <div class="sub" style="margin-bottom:6px;">Media de todas las respuestas</div>
+    <div class="big" id="avgScore">–</div>
+    <div class="n" id="countText"></div>
+  </div>
+
+  <div class="card history" id="historyCard" style="display:none;">
+    <div class="sub" style="margin-bottom:8px;">Historial</div>
+    <table>
+      <thead><tr><th>Participante</th><th>SUS</th><th>Fecha</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div class="btnrow">
+      <button class="secondary" id="exportBtn" type="button">Exportar a CSV</button>
+      <button class="secondary danger" id="clearBtn" type="button">Borrar historial</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
