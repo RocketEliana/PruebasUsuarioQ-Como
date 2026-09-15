@@ -1,3 +1,13 @@
+// ====== CONFIGURA ESTO CON TUS DATOS DE CALLMEBOT ======
+// 1. Activa el bot siguiendo las instrucciones de callmebot.com/blog/free-api-whatsapp-messages
+// 2. Pon aquí tu número con prefijo de país SIN el "+" (ej: '34612345678')
+// 3. Pon aquí el apikey que te mandó el bot por WhatsApp
+const WHATSAPP_PHONE = '34623338696';
+const WHATSAPP_APIKEY = '3428013';
+// =========================================================
+
+const whatsappConfigured = WHATSAPP_PHONE !== 'TU_NUMERO_AQUI' && WHATSAPP_APIKEY !== 'TU_APIKEY_AQUI';
+
 const STATEMENTS = [
   "Creo que usaría Q-Como con frecuencia",
   "Me ha parecido innecesariamente complicada",
@@ -30,14 +40,17 @@ const STORAGE_KEY = 'qcomo_sus_responses';
 // Copia en memoria de la sesión actual. Se usa siempre, incluso si
 // localStorage falla, para que "Exportar a CSV" nunca se quede sin datos.
 let currentList = [];
-let storageAvailable = true;
 
 function renderQuestionSet(container, statements, namePrefix){
   statements.forEach((text, i) => {
     const div = document.createElement('div');
     div.className = 'q';
+    // Sin "required": los radios están ocultos con display:none (ver CSS)
+    // para poder pintarlos como botones, y un control required + oculto
+    // hace que el navegador intente enfocarlo al validar y falle en
+    // silencio, bloqueando el envío sin avisar. Validamos a mano en JS.
     const scaleHtml = [1,2,3,4,5].map(v =>
-      `<input type="radio" name="${namePrefix}${i}" id="${namePrefix}${i}_${v}" value="${v}" required>
+      `<input type="radio" name="${namePrefix}${i}" id="${namePrefix}${i}_${v}" value="${v}">
        <label for="${namePrefix}${i}_${v}">${v}</label>`
     ).join('');
     div.innerHTML = `
@@ -64,32 +77,44 @@ function computeCustomAvg(values){
   return sum / values.length;
 }
 
-// Lee todo lo que ya hubiera guardado en este navegador (si lo hay)
-// y lo combina con lo que llevamos en memoria en esta sesión.
 function loadResponses(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
   }catch(e){
     console.error('No se pudo leer localStorage:', e);
-    storageAvailable = false;
     return [];
   }
 }
 
-// Intenta persistir. Si falla, NO se pierde nada: currentList (en memoria)
-// se mantiene intacta y el CSV se sigue pudiendo exportar con lo recogido
-// en esta sesión, aunque no sobreviva a recargar la página.
+// Intenta persistir en este navegador. Si falla, NO se pierde nada:
+// currentList (en memoria) se mantiene y el CSV se puede exportar igual.
 function saveResponses(list){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    storageAvailable = true;
     return true;
   }catch(e){
     console.error('No se pudo guardar en localStorage:', e);
-    storageAvailable = false;
     return false;
   }
+}
+
+// Manda un WhatsApp vía CallMeBot con la puntuación de esta respuesta.
+// Esto funciona desde CUALQUIER dispositivo que rellene el formulario,
+// así que hace de "registro central": todas las respuestas te llegan
+// al wasap, vengan del dispositivo que vengan.
+function sendWhatsApp(entry){
+  if(!whatsappConfigured) return;
+  const texto =
+    `Q-Como SUS\n` +
+    `Participante: ${entry.name || 'sin código'}\n` +
+    `SUS: ${entry.score.toFixed(1)}/100\n` +
+    `Q-Como: ${entry.customScore.toFixed(2)}/5\n` +
+    (entry.comments ? `Comentario: ${entry.comments}` : '');
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(texto)}&apikey=${WHATSAPP_APIKEY}`;
+  // mode:'no-cors' porque solo nos interesa disparar la petición;
+  // no necesitamos leer la respuesta y así no la bloquea CORS.
+  fetch(url, { mode: 'no-cors' }).catch(err => console.error('No se pudo enviar el WhatsApp:', err));
 }
 
 function renderStats(list){
@@ -120,15 +145,18 @@ function renderStats(list){
 function showMsg(text, ok){
   const el = document.getElementById('resultMsg');
   el.innerHTML = `<div class="msg ${ok?'ok':'err'}">${text}</div>`;
-  setTimeout(()=>{ el.innerHTML=''; }, 5000);
+  setTimeout(()=>{ el.innerHTML=''; }, 6000);
+}
+
+if(!whatsappConfigured){
+  showMsg('⚠️ Falta configurar tu número y apikey de CallMeBot en script.js para recibir los avisos por WhatsApp.', false);
 }
 
 currentList = loadResponses();
 renderStats(currentList);
 
 // Lee las respuestas de un bloque de preguntas. Devuelve null (en vez de
-// lanzar un error) si falta alguna respuesta, para poder avisar con un
-// mensaje claro en vez de que el formulario falle en silencio.
+// lanzar un error) si falta alguna respuesta.
 function readAnswers(namePrefix, count){
   const values = [];
   for(let i=0;i<count;i++){
@@ -167,15 +195,14 @@ document.getElementById('susForm').addEventListener('submit', function(e){
       date: new Date().toLocaleDateString('es-ES')
     };
 
-    // Se añade siempre a la copia en memoria primero, así el CSV nunca
-    // pierde una respuesta aunque falle el guardado persistente.
     currentList.push(entry);
     const persisted = saveResponses(currentList);
+    sendWhatsApp(entry);
 
     if(persisted){
       showMsg(`Guardado. SUS: <b>${score.toFixed(1)}</b>/100 · Q-Como: <b>${customScore.toFixed(2)}</b>/5`, true);
     }else{
-      showMsg(`Respuesta registrada en esta sesión (SUS: <b>${score.toFixed(1)}</b>, Q-Como: <b>${customScore.toFixed(2)}</b>), pero este navegador no permite guardar de forma permanente. Exporta el CSV antes de cerrar la pestaña para no perderla.`, false);
+      showMsg(`Respuesta registrada en esta sesión (SUS: <b>${score.toFixed(1)}</b>, Q-Como: <b>${customScore.toFixed(2)}</b>), pero este navegador no permite guardar de forma permanente. Exporta el CSV antes de cerrar la pestaña.`, false);
     }
     renderStats(currentList);
     this.reset();
