@@ -1,7 +1,7 @@
-// ====== CONFIGURA ESTO CON TUS DATOS DE CALLMEBOT ======
-// 1. Activa el bot siguiendo las instrucciones de callmebot.com/blog/free-api-whatsapp-messages
-// 2. Pon aquí tu número con prefijo de país SIN el "+" (ej: '34612345678')
-// 3. Pon aquí el apikey que te mandó el bot por WhatsApp
+//  DATOS DE CALLMEBOT 
+// 1. Activacion del bot siguiendo las instrucciones de callmebot.com/blog/free-api-whatsapp-messages
+// 2. número con prefijo de país SIN  "+" 
+// apikey que te mandó el bot por WhatsApp
 const WHATSAPP_PHONE = '34623338696';
 const WHATSAPP_APIKEY = '3428013';
 // =========================================================
@@ -20,10 +20,13 @@ const STATEMENTS = [
   "Me he sentido seguro/a usándola",
   "He necesitado aprender muchas cosas antes de poder usarla"
 ];
+//las preguntas en posición par (0, 2, 4, 6, 8) están redactadas en positivo ("me ha parecido fácil de usar"), y las de posición impar (1, 3, 5, 7, 9) están redactadas en negativo ("me ha parecido innecesariamente complicada").
+
+//Esto es el diseño original del cuestionario SUS (creado por John Brooke en 1986): alterna afirmaciones positivas y negativas a propósito, para forzar a quien responde a leer cada pregunta con atención (evita que la gente marque todo "5" sin pensar, en modo piloto automático).
 const ODD = [0,2,4,6,8];
 const EVEN = [1,3,5,7,9];
 
-// Preguntas específicas de Q-Como (todas en positivo: 5 = mejor)
+// Preguntas específicas de Q-Como
 const CUSTOM_STATEMENTS = [
   "El escaneo del código de barras funcionó como esperaba",
   "La información del producto (Nutriscore/Ecoscore) fue fácil de entender",
@@ -220,23 +223,3 @@ document.getElementById('clearBtn').addEventListener('click', function(){
   showMsg('Historial borrado.', true);
 });
 
-document.getElementById('exportBtn').addEventListener('click', function(){
-  if(currentList.length === 0){
-    showMsg('Todavía no hay ninguna respuesta guardada en esta sesión.', false);
-    return;
-  }
-  let csv = 'Participante,Puntuacion SUS,Puntuacion Q-Como,Fecha,Comentarios\n';
-  currentList.forEach(item => {
-    const comment = (item.comments || '').replace(/"/g, '""');
-    csv += `"${item.name || ''}",${item.score.toFixed(1)},${(item.customScore||0).toFixed(2)},"${item.date}","${comment}"\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'qcomo-sus-respuestas.csv';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-});
